@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enigma Simulator (Rotor Wheels)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+
+<style>
+body {
+  font-family: "Special Elite", system-ui;
+
+    background-color: #222;
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+.hidden-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: text; /* optional: prevents pointer cursor */
+}
+.enigma-container {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 1200px;
+    width: 100%;
+    text-align: center;
+}
+h1 { margin-bottom: 20px; }
+.rotors {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.rotor {
+    background-color: #444;
+    padding: 10px;
+    border-radius: 10px;
+    width: 80px;
+}
+.rotor button {
+    width: 100%;
+    padding: 5px;
+    font-size: 16px;
+    margin: 2px 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #555;
+    color: #fff;
+}
+.rotor button:hover { background-color: #777; }
+.rotor span {
+    display: block;
+    font-size: 24px;
+    margin: 5px 0;
+}
+.active-rotor {
+    color: #0f0;
+    font-weight: bold;
+}
+.input-section, .output-section {
+    margin-bottom: 15px;
+}
+input[type=text] {
+    width: 80%;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+}
+button#encryptBtn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #555;
+    color: #fff;
+}
+button#encryptBtn:hover { background-color: #777; }
+</style>
+</head>
+<body>
+<div class="enigma-container">
+<h1>
+  Enigm<a href="hiddenterminal.html" class="hidden-link">a</a> machine
+</h1>
+
+<div class="rotors">
+    <div class="rotor" id="rotor1">
+        <button onclick="changeRotorPosition(0,1)">▲</button>
+        <span class="position active-rotor" id="posDisplay0">A</span>
+        <button onclick="changeRotorPosition(0,-1)">▼</button>
+        <select id="rotorSelect0"></select>
+    </div>
+    <div class="rotor" id="rotor2">
+        <button onclick="changeRotorPosition(1,1)">▲</button>
+        <span class="position active-rotor" id="posDisplay1">A</span>
+        <button onclick="changeRotorPosition(1,-1)">▼</button>
+        <select id="rotorSelect1"></select>
+    </div>
+    <div class="rotor" id="rotor3">
+        <button onclick="changeRotorPosition(2,1)">▲</button>
+        <span class="position active-rotor" id="posDisplay2">A</span>
+        <button onclick="changeRotorPosition(2,-1)">▼</button>
+        <select id="rotorSelect2"></select>
+    </div>
+    <div class="rotor" id="rotor4">
+        <button onclick="changeRotorPosition(3,1)">▲</button>
+        <span class="position" id="posDisplay3">A</span>
+        <button onclick="changeRotorPosition(3,-1)">▼</button>
+        <select id="rotorSelect3"></select>
+    </div>
+    <div class="rotor" id="rotor5">
+        <button onclick="changeRotorPosition(4,1)">▲</button>
+        <span class="position" id="posDisplay4">A</span>
+        <button onclick="changeRotorPosition(4,-1)">▼</button>
+        <select id="rotorSelect4"></select>
+    </div>
+</div>
+
+<div class="input-section">
+    <input type="text" id="plugboard" placeholder="Plugboard pairs e.g., AB CD EF" value="">
+    <br><br>
+    <input type="text" id="inputText" placeholder="Type text here">
+</div>
+
+<button id="encryptBtn">Encrypt / Decrypt</button>
+
+<div class="output-section">
+    <p>Rotor Positions: <span id="rotorPositions">A B C</span></p>
+    <p>Output: <span id="outputText"></span></p>
+</div>
+</div>
+
+<script>
+// Alphabet
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Rotor wirings
+const rotorWiring = {
+    "I":   "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
+    "II":  "AJDKSIRUXBLHWTMCQGZNPYFVOE",
+    "III": "BDFHJLCPRTXVZNYEIWGAKMUSQO",
+    "IV":  "ESOVPZJAYQUIRHXLNFTGKDCMWB",
+    "V":   "VZBRGITYUPSDNHLXAWMJQOFECK"
+};
+const rotorTurnover = { "I":"Q","II":"E","III":"V","IV":"J","V":"Z" };
+const reflectorB = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
+
+let rotors = ["I","II","III","IV","V"];
+let rotorPositions = [0,0,0,0,0]; // positions for all 5
+let plugboardMap = {};
+
+// Helpers
+function charToIndex(c){ return alphabet.indexOf(c.toUpperCase()); }
+function indexToChar(i){ return alphabet[i%26]; }
+
+function setPlugboard(pairs){
+    plugboardMap = {};
+    pairs = pairs.toUpperCase().split(" ");
+    pairs.forEach(pair=>{
+        if(pair.length===2){
+            plugboardMap[pair[0]]=pair[1];
+            plugboardMap[pair[1]]=pair[0];
+        }
+    });
+}
+function plugboardSwap(c){ return plugboardMap[c] || c; }
+
+function changeRotorPosition(rotorIndex, delta){
+    rotorPositions[rotorIndex] = (rotorPositions[rotorIndex] + delta + 26) % 26;
+    document.getElementById("posDisplay"+rotorIndex).textContent = indexToChar(rotorPositions[rotorIndex]);
+}
+
+// Rotor dropdowns
+function populateRotorDropdowns(){
+    for(let i=0;i<5;i++){
+        const select = document.getElementById("rotorSelect"+i);
+        select.innerHTML = "";
+        Object.keys(rotorWiring).forEach(rotor=>{
+            const opt = document.createElement("option");
+            opt.value = rotor;
+            opt.text = rotor;
+            select.appendChild(opt);
+        });
+        select.value = rotors[i];
+        select.addEventListener("change", ()=>{ rotors[i]=select.value; });
+    }
+}
+
+// Step rotors (double-step)
+function stepRotors(){
+    let rotate2=false, rotate3=false;
+    if(indexToChar(rotorPositions[1])===rotorTurnover[rotors[1]]) rotate3=true;
+    if(indexToChar(rotorPositions[0])===rotorTurnover[rotors[0]]) rotate2=true;
+
+    rotorPositions[0] = (rotorPositions[0]+1)%26;
+    if(rotate2) rotorPositions[1] = (rotorPositions[1]+1)%26;
+    if(rotate3) rotorPositions[2] = (rotorPositions[2]+1)%26;
+
+    for(let i=0;i<5;i++){
+        document.getElementById("posDisplay"+i).textContent = indexToChar(rotorPositions[i]);
+    }
+    document.getElementById("rotorPositions").textContent = rotorPositions.slice(0,3).map(i=>indexToChar(i)).join(" ");
+}
+
+function passRotor(c, rotor, pos, forward=true){
+    let wiring = rotorWiring[rotor];
+    let idx = charToIndex(c);
+    return forward ? wiring[(idx+pos)%26] : indexToChar((wiring.indexOf(c)-pos+26)%26);
+}
+
+function enigmaEncrypt(text){
+    text = text.toUpperCase().replace(/[^A-Z]/g,"");
+    let output="";
+    for(let c of text){
+        stepRotors();
+        c = plugboardSwap(c);
+
+        // Only first 3 rotors active
+        c = passRotor(c, rotors[0], rotorPositions[0], true);
+        c = passRotor(c, rotors[1], rotorPositions[1], true);
+        c = passRotor(c, rotors[2], rotorPositions[2], true);
+
+        c = reflectorB[charToIndex(c)];
+
+        c = passRotor(c, rotors[2], rotorPositions[2], false);
+        c = passRotor(c, rotors[1], rotorPositions[1], false);
+        c = passRotor(c, rotors[0], rotorPositions[0], false);
+
+        c = plugboardSwap(c);
+        output += c;
+    }
+    return output;
+}
+
+document.getElementById("encryptBtn").addEventListener("click",()=>{
+    setPlugboard(document.getElementById("plugboard").value);
+    const inputText = document.getElementById("inputText").value;
+    const output = enigmaEncrypt(inputText);
+    document.getElementById("outputText").textContent = output;
+});
+
+populateRotorDropdowns();
+</script>
+</body>
+</html>

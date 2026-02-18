@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
+
+<meta charset="UTF-8">
+<title> rot Encoder/Decoder</title>
+
+<style>
+* {
+  font-family: "Special Elite", system-ui;
+  color:#d9d9d9; 
+  font-size: 16px;
+}
+
+body {
+  background-color:#1d1d1d;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+    font-size: 40px;
+
+}
+
+h1 {
+  text-align: center;
+      font-size: 40px;
+
+}
+
+/* MAIN CONTAINERS */
+.container {
+  display: flex;
+  background-color: transparent;
+}
+
+.input-section, .control-section {
+  margin: 10px;
+}
+
+h2 {
+  color:#d9d9d9; 
+}
+
+/* BUTTONS */
+.control-section button.circular {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 5px;
+  border: 1px solid #d9d9d9;
+  background-color: transparent;
+  color:#d9d9d9; 
+  cursor: pointer;
+}
+
+.control-section button.circular:hover {
+  background-color: red;
+}
+
+.control-section button.circular:active,
+.control-section button.circular.selected {
+  background-color: red;
+}
+
+.control-section button.encrypt-btn {
+  width: 80px;
+  height: 40px;
+  margin-top: 10px;
+  border: 1px solid #d9d9d9;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.control-section button.encrypt-btn:hover {
+  background-color: white;
+  color: black;
+}
+
+/* TEXTAREAS */
+textarea {
+  outline: none;
+  background-color:#2a2a2a;
+  border: 1px dashed #d9d9d9;
+  color:#d9d9d9; 
+}
+</style>
+</head>
+
+<body>
+
+<!-- CENTERED HEADER -->
+<div class="header">
+  <h1>Rot Encoder</h1>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <div class="input-section">
+    <h2>Input Message</h2>
+    <textarea id="plaintext" rows="10" cols="90"></textarea>
+
+    <h2>Output Message</h2>
+    <textarea id="encrypted" rows="10" cols="90" readonly></textarea>
+  </div>
+
+  <div class="control-section">
+    <h2>Rotation</h2>
+    <div id="rot-values"></div>
+
+    <button class="encrypt-btn" onclick="encrypt()">Encrypt</button>
+    <button class="encrypt-btn" onclick="decrypt()">Decrypt</button>
+  </div>
+</div>
+
+<script>
+const rotContainer = document.getElementById('rot-values');
+
+for (let i = 0; i < 26; i++) {
+  const button = document.createElement('button');
+  button.classList.add('circular');
+  button.innerText = i;
+  button.onclick = function() {
+    selectRotation(i);
+    updateSelectedButton(button);
+  };
+  rotContainer.appendChild(button);
+}
+
+let selectedRotation = 13;
+
+function selectRotation(rot) {
+  selectedRotation = rot;
+}
+
+function updateSelectedButton(button) {
+  document
+    .querySelectorAll('.control-section button.circular')
+    .forEach(btn => btn.classList.remove('selected'));
+  button.classList.add('selected');
+}
+
+function encrypt() {
+  const plaintext = document.getElementById('plaintext').value;
+  document.getElementById('encrypted').value = rot(plaintext, selectedRotation);
+}
+
+function decrypt() {
+  const ciphertext = document.getElementById('encrypted').value;
+  document.getElementById('plaintext').value = rot(ciphertext, 26 - selectedRotation);
+}
+
+function rot(str, amount) {
+  let output = '';
+  for (let i = 0; i < str.length; i++) {
+    let c = str[i];
+    if (/[a-z]/i.test(c)) {
+      const code = str.charCodeAt(i);
+      if (code >= 65 && code <= 90) {
+        c = String.fromCharCode(((code - 65 + amount) % 26) + 65);
+      } else if (code >= 97 && code <= 122) {
+        c = String.fromCharCode(((code - 97 + amount) % 26) + 97);
+      }
+    }
+    output += c;
+  }
+  return output;
+}
+</script>
+
+</body>
+</html>

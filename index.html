@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>My Project</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #2a2a2a;
+  font-family: "Special Elite", system-ui;
+
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 40px;
+            text-align: center;
+            font-size: 5rem;
+            letter-spacing: 2px;
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: repeat(3, 200px);
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .links a {
+            text-decoration: none;
+            color: white;
+
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            transition: 0.2s ease;
+        }
+
+        .links a:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="glitchTitle">Enigma Machine</h1>
+
+    <div class="links">
+        <a href="rot.html">Rot cipher</a>
+        <a href="atbash.html">AES</a>
+        <a href="#">Atbash</a>
+        <a href="enigma2.html">Enigma Machine</a>
+        <a href="vig.html">Vigenere Cipher</a>
+    </div>
+
+    <script>
+        const title = document.getElementById("glitchTitle");
+        const originalText = title.textContent;
+
+        function randomGlitch() {
+            const textArray = originalText.split("");
+
+            const letterIndexes = textArray
+                .map((char, index) => /[a-zA-Z]/.test(char) ? index : null)
+                .filter(index => index !== null);
+
+            if (letterIndexes.length === 0) return;
+
+            const randomIndex = letterIndexes[Math.floor(Math.random() * letterIndexes.length)];
+            const randomNumber = Math.floor(Math.random() * 10);
+
+            const glitchedArray = [...textArray];
+            glitchedArray[randomIndex] = randomNumber;
+
+            title.textContent = glitchedArray.join("");
+
+            setTimeout(() => {
+                title.textContent = originalText;
+            }, 150);
+        }
+
+        setInterval(randomGlitch, 800);
+    </script>
+
+</body>
+</html>
